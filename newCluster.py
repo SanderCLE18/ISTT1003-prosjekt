@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from IPython import display
 from scipy.spatial.distance import cdist
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import KMeans
@@ -79,8 +80,41 @@ fig, ax = plt.subplots(figsize=(8, 4))
 dendro = dendrogram(link, truncate_mode="lastp", p = 30, no_labels=True, ax=ax)
 
 ax.grid(False)
-ax.set_ylabel("Avstand (complete)")
+ax.set_ylabel("Avstand (Ward)")
 ax.set_xlabel("Grupper av boliger")
 ax.set_title("Dendrogram, hierarkisk klynging")
 plt.show()
 # Dendrogrammet gir 4 grupper/K = 4
+
+
+#Lager klyngene, og finner antallet profesjonelle og medianpris i hver klynge.
+kmeans = KMeans(n_clusters=K, n_init=10, random_state=SEED)
+data["klynge"] = kmeans.fit_predict(X)
+
+klynger = data.groupby("klynge")[KLYNGEVARIABLER].mean().round(2)
+klynger["antall"] = data.groupby("klynge").size()
+klynger["andel prof. (%)"] = (data.groupby("klynge")["biz"].mean() * 100).round(1)
+klynger["andel helg"] = (data.groupby("klynge")["helg"].mean() * 100).round(1)
+klynger["medianpris"] = data.groupby("klynge")["realSum"].median().round(1)
+
+#Klyngenes posisjon
+ncol = min(K, 3)
+nrad = int(np.ceil(K/ncol))
+
+fig, axes = plt.subplots(nrows=nrad, ncols=ncol, figsize=(4*ncol, 3.6*nrad),
+                         sharex=True, sharey=True, squeeze=False)
+
+#Lager et "kart" for hver klynge
+for k, ax in enumerate(axes.flatten()):
+    if k>=K:
+        ax.set_visible(False)
+        continue
+    ax.scatter(data["lng"], data["lat"], s=3, color = "#d0d0d0", linewidth=0)
+    d=data[data["klynge"] == k]
+    ax.scatter(d["lng"], d["lat"], s=6, color = "#78081C", linewidth=0)
+    ax.set_title(f"Klynge {k}, Antall = {len(d)}")
+    ax.grid(False)
+fig.supxlabel("Lengdegrad")
+fig.supylabel("Breddegrad")
+fig.tight_layout()
+plt.show()
