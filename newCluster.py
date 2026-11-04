@@ -7,6 +7,7 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
+
 K = 4
 SEED = 67
 
@@ -117,4 +118,24 @@ for k, ax in enumerate(axes.flatten()):
 fig.supxlabel("Lengdegrad")
 fig.supylabel("Breddegrad")
 fig.tight_layout()
+plt.show()
+
+profil = pd.DataFrame(X, columns=KLYNGEVARIABLER).groupby(data["klynge"]).mean()
+vmax = np.abs(profil.to_numpy()).max()
+fig, ax = plt.subplots(figsize=(10,8))
+bilde = ax.imshow(profil.to_numpy(), cmap="RdBu_r", vmin=-vmax, vmax=vmax)
+ax.set_xticks(range(len(KLYNGEVARIABLER)))
+ax.set_xticklabels([KLYNGEVARIABLER[v] for v in range(len(KLYNGEVARIABLER))], ha = "right", rotation=45)
+ax.set_yticks(range(K))
+ax.set_yticklabels([f"Klynge {k + 1}" for k in range(K)])
+ax.grid(False)
+
+for i in range(K):
+    for j in range(len(KLYNGEVARIABLER)):
+        verdi = profil.iat[i, j]
+        tekst = f"{verdi:.1f}".replace("-0.0", "0.0")
+        ax.text(j, i, tekst, ha="center", va="center", color="white" if abs(verdi) > 0.5*vmax else "black")
+
+fig.colorbar(bilde, ax=ax, label = "Standardavvik fra snittet")
+ax.set_title("Klyngeprofiler")
 plt.show()
