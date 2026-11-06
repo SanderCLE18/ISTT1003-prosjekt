@@ -120,9 +120,10 @@ fig.supylabel("Breddegrad")
 fig.tight_layout()
 plt.show()
 
+# Lager heatmap av klyngene.
 profil = pd.DataFrame(X, columns=KLYNGEVARIABLER).groupby(data["klynge"]).mean()
 vmax = np.abs(profil.to_numpy()).max()
-fig, ax = plt.subplots(figsize=(10,8))
+fig, ax = plt.subplots(figsize=(10, 8))
 bilde = ax.imshow(profil.to_numpy(), cmap="RdBu_r", vmin=-vmax, vmax=vmax)
 ax.set_xticks(range(len(KLYNGEVARIABLER)))
 ax.set_xticklabels([KLYNGEVARIABLER[v] for v in range(len(KLYNGEVARIABLER))], ha = "right", rotation=45)
@@ -138,4 +139,37 @@ for i in range(K):
 
 fig.colorbar(bilde, ax=ax, label = "Standardavvik fra snittet")
 ax.set_title("Klyngeprofiler")
+plt.show()
+
+#Stolpediagram av medianpris hverdag vs. helg for profesjonelle (biz) i hver klynge
+biz = data[data["biz"] == 1]
+median_biz = biz.groupby(["klynge", "helg"])["realSum"].median().unstack("helg")
+antall_biz = biz.groupby(["klynge", "helg"]).size().unstack("helg")
+okning = (median_biz[1] / median_biz[0] - 1) * 100
+
+print(pd.DataFrame({
+    "median hverdag": median_biz[0].round(1),
+    "median helg": median_biz[1].round(1),
+    "økning (%)": okning.round(1),
+    "n hverdag": antall_biz[0],
+    "n helg": antall_biz[1],
+}))
+
+x = np.arange(K)
+bredde = 0.36
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.bar(x - 0.19, median_biz[0], bredde, color="#b8707a", label="Hverdag")
+ax.bar(x + 0.19, median_biz[1], bredde, color="#78081C", label="Helg")
+
+#Skriver prosentvis endring over hvert stolpepar
+for k in range(K):
+    ax.text(x[k], median_biz.loc[k].max() + 4, f"{okning[k]:+.1f} %", ha="center", va="bottom")
+
+ax.set_xticks(x)
+ax.set_xticklabels([f"Klynge {k + 1}\nn = {antall_biz.loc[k, 0]} / {antall_biz.loc[k, 1]}" for k in range(K)])
+ax.grid(axis="x", visible=False)
+ax.set_ylim(0, median_biz.to_numpy().max() * 1.18)
+ax.set_ylabel("Medianpris (€)")
+ax.set_title("Medianpris for profesjonelle utleiere, hverdag vs. helg")
+ax.legend(frameon=False, loc="upper left", ncols=2)
 plt.show()
