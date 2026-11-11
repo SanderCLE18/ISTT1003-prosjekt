@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.patches import Rectangle
+from itertools import groupby
 from IPython import display
 from scipy.spatial.distance import cdist
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -10,7 +12,6 @@ from sklearn.preprocessing import StandardScaler
 
 K = 5
 SEED = 67
-
 KLYNGEVARIABLER = [
     "person_capacity",
     "bedrooms",
@@ -87,7 +88,29 @@ ax.set_ylabel("Avstand (Ward)")
 ax.set_xlabel("Grupper av boliger")
 ax.set_title("Dendrogram, hierarkisk klynging")
 plt.show()
-# Dendrogrammet gir 4 grupper/K = 4
+
+# Dendrogram med grupperinger
+cut = (link[-K, 2] + link[-(K - 1), 2]) / 2
+
+fig, ax = plt.subplots(figsize=(8, 4))
+dendro_k = dendrogram(link, truncate_mode="lastp", p=30, no_labels=True, ax=ax,
+                      color_threshold=cut, above_threshold_color="grey")
+
+i = 0
+for nr, (farge, gruppe) in enumerate(groupby(dendro_k["leaves_color_list"]), start=1):
+    n = len(list(gruppe))
+    ax.add_patch(Rectangle((10 * i + 1, 0), 10 * n - 2, cut * 0.95,
+                           fill=False, ec=farge, lw=2, ls="--", alpha=0.5))
+    ax.text(10 * i + 5 * n, cut * 0.97, f"Klynge {nr}",
+            ha="center", va="bottom", fontsize=9, color=farge)
+    i += n
+
+ax.grid(False)
+ax.set_ylabel("Avstand (Ward)")
+ax.set_xlabel("Grupper av boliger")
+ax.set_title(f"Dendrogram med {K} klynger")
+plt.show()
+# Dendrogrammet gir 5 grupper/K = 5
 
 
 #Lager klyngene, og finner antallet profesjonelle og medianpris i hver klynge.
