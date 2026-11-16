@@ -138,7 +138,7 @@ for k, ax in enumerate(axes.flatten()):
     ax.scatter(data["lng"], data["lat"], s=3, color = "#d0d0d0", linewidth=0)
     d=data[data["klynge"] == k]
     ax.scatter(d["lng"], d["lat"], s=6, color = "#78081C", linewidth=0)
-    ax.set_title(f"Klynge {k}, Antall = {len(d)}")
+    ax.set_title(f"Klynge {k + 1}, Antall = {len(d)}")
     ax.grid(False)
 fig.supxlabel("Lengdegrad")
 fig.supylabel("Breddegrad")
@@ -177,15 +177,6 @@ median_nbiz = nbiz.groupby(["klynge", "helg"])["realSum"].median().unstack("helg
 antall_nbiz = nbiz.groupby(["klynge", "helg"]).size().unstack("helg")
 nbokning = (median_nbiz[1] / median_nbiz[0] - 1) * 100
 
-
-
-"""print(pd.DataFrame({
-    "median hverdag": median_biz[0].round(1),
-    "median helg": median_biz[1].round(1),
-    "økning (%)": okning.round(1),
-    "n hverdag": antall_biz[0],
-    "n helg": antall_biz[1],
-}))"""
 
 x = np.arange(K)
 bredde = 0.36
